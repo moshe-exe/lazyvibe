@@ -1,0 +1,59 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+
+      - name: Get version
+        id: version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+
+      - name: Build binaries
+        run: |
+          VERSION=${{ steps.version.outputs.VERSION }}
+
+          # Darwin AMD64
+          GOOS=darwin GOARCH=amd64 go build -ldflags "-s -w -X main.version=$VERSION" \
+            -o dist/lazyclaude-darwin-amd64 ./cmd/lazyclaude
+
+          # Darwin ARM64
+          GOOS=darwin GOARCH=arm64 go build -ldflags "-s -w -X main.version=$VERSION" \
+            -o dist/lazyclaude-darwin-arm64 ./cmd/lazyclaude
+
+          # Linux AMD64
+          GOOS=linux GOARCH=amd64 go build -ldflags "-s -w -X main.version=$VERSION" \
+            -o dist/lazyclaude-linux-amd64 ./cmd/lazyclaude
+
+          # Linux ARM64
+          GOOS=linux GOARCH=arm64 go build -ldflags "-s -w -X main.version=$VERSION" \
+            -o dist/lazyclaude-linux-arm64 ./cmd/lazyclaude
+
+      - name: Create checksums
+        run: |
+          cd dist
+          sha256sum lazyclaude-* > checksums.txt
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            dist/lazyclaude-*
+            dist/checksums.txt
+          generate_release_notes: true

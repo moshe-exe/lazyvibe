@@ -1,0 +1,22 @@
+# Binary
+/lazyvibe
+/build/
+/dist/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Dev captures
+.dev-captures/
+
+# Test coverage
+coverage.out
+coverage.html
